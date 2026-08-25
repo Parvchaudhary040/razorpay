@@ -5,13 +5,14 @@
   "workspaces": [
     "packages/*",
     "services/*",
-    "apps/*"
+    "apps/*",
+    "frontend"
   ],
   "scripts": {
     "typecheck": "npm run typecheck --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
     "dev:api": "npm run dev -w apps/api",
-    "dev:web": "npm run dev -w apps/web",
+    "dev:web": "npm run dev -w frontend",
     "lint": "npm run lint --workspaces --if-present"
   },
   "engines": {

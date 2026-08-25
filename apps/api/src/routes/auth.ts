@@ -76,6 +76,35 @@ authRouter.get('/me', authenticate, async (req: AuthenticatedRequest, res, next)
   }
 });
 
+/** POST /api/auth/refresh — Exchange the httpOnly refresh cookie for a new access token. */
+authRouter.post('/refresh', async (req, res, next) => {
+  try {
+    const refreshToken = req.headers.cookie
+      ?.split(';')
+      .map((cookie) => cookie.trim().split('='))
+      .find(([name]) => name === 'refreshToken')
+      ?.slice(1)
+      .join('=');
+    if (!refreshToken) {
+      throw new ValidationError('Refresh token is required');
+    }
+
+    const payload = AuthService.verifyToken(refreshToken);
+    const userId = payload.sub;
+    const role = payload.role;
+    const sessionId = payload.sessionId;
+    if (!userId || !role || !sessionId) {
+      throw new ValidationError('Invalid refresh token');
+    }
+
+    res.status(200).json({
+      accessToken: AuthService.generateAccessToken(userId, role, sessionId),
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 /** POST /api/auth/logout */
 authRouter.post('/logout', authenticate, async (req: AuthenticatedRequest, res, next) => {
   try {

@@ -42,3 +42,40 @@ export interface AgentWorkflowState {
   status: 'PENDING' | 'RUNNING' | 'COMPLETED' | 'FAILED';
   createdAt: string;
 }
+
+export type AgentName = 'DISCOVERY_AGENT' | 'GROWTH_AGENT' | 'CHECKOUT_AGENT';
+
+export interface AgentResponse {
+  /** The agent that produced this response */
+  agent: AgentName;
+  /** Human-friendly message from the agent */
+  message: string;
+  /** Raw tool result data */
+  data?: any;
+  /** Product suggestions or recommendations (Growth Agent) */
+  suggestions?: Array<{
+    productId: string;
+    name: string;
+    price: number;
+    reason: string;
+  }>;
+  /** Whether the user must explicitly confirm before proceeding (Checkout Agent) */
+  requiresConfirmation?: boolean;
+  /** Context for a pending confirmation (order summary, total, etc.) */
+  confirmationContext?: {
+    action: 'CREATE_ORDER' | 'CREATE_PAYMENT';
+    summary: string;
+    totalAmount: number;
+    itemCount: number;
+    cartId: string;
+  };
+}
+
+export interface CheckoutConfirmationState {
+  userId: string;
+  action: 'CREATE_ORDER' | 'CREATE_PAYMENT';
+  totalAmount: number;
+  itemCount: number;
+  cartId: string;
+  createdAt: string;
+}

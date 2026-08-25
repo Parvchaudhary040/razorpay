@@ -1,1 +1,1 @@
-// MCP user context server
+export { userContextServer } from '@commerce-ai/tools';

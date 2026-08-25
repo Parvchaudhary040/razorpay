@@ -1,1 +1,1 @@
-// MCP payment gateway server
+export { paymentGatewayServer } from '@commerce-ai/tools';

@@ -1,1 +1,1 @@
-// MCP cart manager server
+export { cartManagerServer } from '@commerce-ai/tools';

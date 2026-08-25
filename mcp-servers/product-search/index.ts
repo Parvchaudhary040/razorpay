@@ -1,1 +1,1 @@
-// MCP product search server
+export { productSearchServer } from '@commerce-ai/tools';

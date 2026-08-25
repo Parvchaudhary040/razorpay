@@ -1,8 +1,15 @@
-import { z } from 'zod';
+﻿import { z } from 'zod';
 import { pool } from '@commerce-ai/database';
 import { ProductService } from '@commerce-ai/catalog';
 import { CartService } from '@commerce-ai/cart';
-import { ValidationError, ForbiddenError, NotFoundError, logger } from '@commerce-ai/shared';
+import { ValidationError, ForbiddenError, NotFoundError, logger, loadConfig } from '@commerce-ai/shared';
+import Razorpay from 'razorpay';
+
+const config = loadConfig();
+const razorpay = new Razorpay({
+  key_id: config.razorpay.keyId,
+  key_secret: config.razorpay.keySecret,
+});
 
 // Predefined Zod Input Schemas for all 10 Tools
 export const ToolSchemas = {
@@ -213,7 +220,7 @@ export class CommerceToolLayer {
 
             for (const item of cart.items) {
               await client.query(
-                'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ($1, $2, $3, $4)',
+                'INSERT INTO order_items (order_id, product_id, quantity, unit_price) VALUES ($1, $2, $3, $4)',
                 [order.id, item.productId, item.quantity, item.price]
               );
               // Decrement product inventory stock count
@@ -338,3 +345,4 @@ export class CommerceToolLayer {
     }
   }
 }
+export * from './mcp';

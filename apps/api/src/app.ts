@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+﻿import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import { 
@@ -21,6 +21,10 @@ import { authRouter } from './routes/auth';
 import { productsRouter } from './routes/products';
 import { cartsRouter } from './routes/carts';
 import { aiRouter } from './routes/ai';
+import { paymentsRouter } from './routes/payments';
+import { webhooksRouter } from './routes/webhooks';
+import { auditRouter } from './routes/audit';
+import { ordersRouter } from './routes/orders';
 import { authenticate, authorize, AuthenticatedRequest } from './middleware/auth';
 import { requestIdMiddleware, RequestWithId } from './middleware/requestId';
 
@@ -38,12 +42,17 @@ app.use(helmet());
 app.use(cors({
   origin: config.cors.origin,
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
 }));
 
 // --- 4. Body Parsers (Request size limits enforced here) ---
-app.use(express.json({ limit: '1mb' }));
+app.use(express.json({
+  limit: '1mb',
+  verify: (req: any, res, buf) => {
+    req.rawBody = buf;
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // --- 5. Input Sanitization ---
@@ -99,6 +108,10 @@ app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
 app.use('/api/ai', aiRouter);
+app.use('/api/payments', paymentLimiter, paymentsRouter);
+app.use('/api/webhooks', webhooksRouter);
+app.use('/api/audit', auditRouter);
+app.use('/api/orders', ordersRouter);
 
 // Stub AI endpoints (AI Rate Limiting)
 app.post('/api/ai/chat', aiLimiter, authenticate, (req: Request, res: Response) => {
@@ -106,9 +119,7 @@ app.post('/api/ai/chat', aiLimiter, authenticate, (req: Request, res: Response) 
 });
 
 // Stub Payment endpoints (Payment Rate Limiting)
-app.post('/api/payments/initiate', paymentLimiter, authenticate, (req: Request, res: Response) => {
-  res.status(200).json({ success: true, message: 'Payment initiated successfully' });
-});
+
 
 // --- 9. Test Routes for Auth & Ownership verification (General Rate Limit) ---
 app.get('/api/test/admin-only', generalLimiter, authenticate, authorize('ADMIN'), (req: Request, res: Response) => {

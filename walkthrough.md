@@ -87,3 +87,8 @@
   - Decoupling LLM: LLM supervisor classifies user intent to a specific predefined tool name. The tool executes strictly matching the hardcoded switch-case tool registry, completely preventing arbitrary database query construction.
 - Integrated the tool layer cleanly into CommerceAgentRunner in @commerce-ai/ai.
 - Verified all **45 integration tests pass successfully**!
+### Resilient Cache Integration & Test Verification
+- Implemented an elegant in-memory fallback inside CacheManager (packages/database/src/cache.ts). If Redis is not connected (such as during local test environments), the cache system automatically degrades to a fast, clean in-memory Map structure. This ensures state persistence of checkout confirmations without requiring a running Redis instance in test builds.
+- Resolved schema mismatch: updated column reference in order_items insert SQL from price to unit_price matching the database schema definition.
+- Created pps/api/tests/agents.test.ts to test all agent workflows (Discovery queries/comparisons, Growth upsell recommendations, Checkout confirmation flows).
+- Verified all **52 integration tests pass successfully (100% pass)**!

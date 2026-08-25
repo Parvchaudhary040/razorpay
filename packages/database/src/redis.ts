@@ -1,4 +1,4 @@
-import { createClient } from 'redis';
+﻿import { createClient } from 'redis';
 import { loadConfig, logger } from '@commerce-ai/shared';
 
 const config = loadConfig();
@@ -6,6 +6,14 @@ const config = loadConfig();
 export const redisClient = createClient({
   url: config.redis.url,
   password: config.redis.password,
+  socket: {
+    reconnectStrategy: (retries) => {
+      if (retries > 2) {
+        return new Error('Redis connection failed');
+      }
+      return 100;
+    },
+  },
 });
 
 redisClient.on('error', (err) => {

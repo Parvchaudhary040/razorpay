@@ -1,1 +1,1 @@
-// MCP order manager server
+export { orderManagerServer } from '@commerce-ai/tools';

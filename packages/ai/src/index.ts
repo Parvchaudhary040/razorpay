@@ -6,3 +6,6 @@ export * from './state';
 export * from './security';
 export * from './security/policy';
 export * from './agents';
+export { DiscoveryAgent } from './agents/discovery';
+export { GrowthAgent } from './agents/growth';
+export { CheckoutAgent } from './agents/checkout';
