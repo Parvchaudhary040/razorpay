@@ -1,0 +1,14 @@
+version: '3.9'
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    # config TBD
+  redis:
+    image: redis:7-alpine
+    # config TBD
+  backend:
+    build: ../../backend
+    # config TBD
+  frontend:
+    build: ../../frontend
+    # config TBD

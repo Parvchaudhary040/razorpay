@@ -1,0 +1,1 @@
+// MCP product search server
