@@ -15,6 +15,7 @@
     "@commerce-ai/database": "*",
     "@commerce-ai/catalog": "*",
     "@commerce-ai/cart": "*",
+    "@commerce-ai/ai": "*",
     "express": "^4.18.2",
     "cors": "^2.8.5",
     "helmet": "^7.1.0",

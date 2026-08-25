@@ -1,8 +1,9 @@
-﻿// ============================================
+// ============================================
 // CommerceAI — Shared Utility Functions
 // ============================================
 
 import { v4 as uuidv4 } from 'uuid';
+import { ValidationError } from './errors';
 
 /** Generate a new UUID v4 */
 export function generateId(): string {
@@ -63,4 +64,61 @@ export function snakeToCamel<T extends Record<string, unknown>>(
     result[camelKey] = value;
   }
   return result;
+}
+
+/** Central Prompt Injection Detection Utility */
+export function detectPromptInjection(input: string, source = 'user'): void {
+  if (!input) return;
+
+  const normalized = input.toLowerCase();
+
+  // 1. Scan for combination overrides
+  if (normalized.includes('ignore') && (
+    normalized.includes('instruction') ||
+    normalized.includes('limit') ||
+    normalized.includes('rule') ||
+    normalized.includes('policy') ||
+    normalized.includes('policies') ||
+    normalized.includes('permission') ||
+    normalized.includes('restrict')
+  )) {
+    throw new ValidationError(
+      `Security violation: Suspicious instruction phrase or prompt injection attempt detected from ${source} source.`
+    );
+  }
+
+  if (normalized.includes('forget') && (
+    normalized.includes('instruction') ||
+    normalized.includes('rule') ||
+    normalized.includes('policy') ||
+    normalized.includes('limit')
+  )) {
+    throw new ValidationError(
+      `Security violation: Suspicious instruction phrase or prompt injection attempt detected from ${source} source.`
+    );
+  }
+
+  // 2. Scan for specific action overrides
+  const strictPatterns = [
+    'override instructions',
+    'override rules',
+    'override policy',
+    'override policies',
+    'bypass permissions',
+    'bypass authorization',
+    'system prompt',
+    'developer prompt',
+    'call refund',
+    'execute refund',
+    'refund order',
+    'refund()'
+  ];
+
+  for (const pattern of strictPatterns) {
+    if (normalized.includes(pattern)) {
+      throw new ValidationError(
+        `Security violation: Suspicious instruction phrase or prompt injection attempt detected from ${source} source.`
+      );
+    }
+  }
 }

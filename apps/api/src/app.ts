@@ -20,6 +20,7 @@ import {
 import { authRouter } from './routes/auth';
 import { productsRouter } from './routes/products';
 import { cartsRouter } from './routes/carts';
+import { aiRouter } from './routes/ai';
 import { authenticate, authorize, AuthenticatedRequest } from './middleware/auth';
 import { requestIdMiddleware, RequestWithId } from './middleware/requestId';
 
@@ -97,6 +98,7 @@ app.get('/health', generalLimiter, async (req: Request, res: Response) => {
 app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/products', productsRouter);
 app.use('/api/carts', cartsRouter);
+app.use('/api/ai', aiRouter);
 
 // Stub AI endpoints (AI Rate Limiting)
 app.post('/api/ai/chat', aiLimiter, authenticate, (req: Request, res: Response) => {

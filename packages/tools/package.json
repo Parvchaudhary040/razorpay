@@ -1,0 +1,22 @@
+{
+  "name": "@commerce-ai/tools",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@commerce-ai/shared": "*",
+    "@commerce-ai/database": "*",
+    "@commerce-ai/catalog": "*",
+    "@commerce-ai/cart": "*",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.11.0"
+  }
+}

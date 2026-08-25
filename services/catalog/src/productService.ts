@@ -6,7 +6,8 @@ import {
   SearchFilters, 
   PaginatedResult, 
   UserRole, 
-  Product 
+  Product,
+  detectPromptInjection
 } from '@commerce-ai/shared';
 import { CacheManager } from '@commerce-ai/database';
 
@@ -42,6 +43,9 @@ export class ProductService {
     if (productData.initialStock < 0) {
       throw new ValidationError('Initial stock cannot be negative');
     }
+
+    // Validate product description for prompt injection patterns
+    detectPromptInjection(productData.description || '', 'product');
 
     const createdProduct = await ProductRepository.create(
       merchantId,
@@ -169,6 +173,11 @@ export class ProductService {
 
     if (updateData.price !== undefined && updateData.price < 0) {
       throw new ValidationError('Price cannot be negative');
+    }
+
+    // Validate product description for prompt injection patterns
+    if (updateData.description !== undefined) {
+      detectPromptInjection(updateData.description, 'product');
     }
 
     // Update product details if supplied
