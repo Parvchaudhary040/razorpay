@@ -12,25 +12,33 @@ export interface AuthenticatedRequest extends Request {
 }
 
 /** Authentication Middleware */
-export function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new UnauthorizedError('Authentication token missing or malformed');
+export async function authenticate(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedError('Authentication token missing or malformed');
+    }
+
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      throw new UnauthorizedError('Authentication token missing');
+    }
+
+    if (await AuthService.isTokenBlocklisted(token)) {
+      throw new UnauthorizedError('Token is revoked');
+    }
+
+    const decoded = AuthService.verifyToken(token);
+    req.user = {
+      userId: decoded.sub,
+      role: decoded.role,
+      sessionId: decoded.sessionId,
+    };
+
+    next();
+  } catch (err) {
+    next(err);
   }
-
-  const token = authHeader.split(' ')[1];
-  if (!token) {
-    throw new UnauthorizedError('Authentication token missing');
-  }
-
-  const decoded = AuthService.verifyToken(token);
-  req.user = {
-    userId: decoded.sub,
-    role: decoded.role,
-    sessionId: decoded.sessionId,
-  };
-
-  next();
 }
 
 /** Role-Based Access Control (RBAC) Middleware */

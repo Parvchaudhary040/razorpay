@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+﻿import React, { useEffect } from 'react';
 import { useCart } from '../hooks/useCart';
 import { CartItem } from '../components/cart/CartItem';
 import { CartSummary } from '../components/cart/CartSummary';
@@ -45,7 +45,7 @@ export const CartPage: React.FC = () => {
           <div className="lg:col-span-2 space-y-4">
             <div className="flex justify-between items-center bg-[#1a1a26] p-4 rounded-xl border border-slate-800">
               <span className="text-sm font-semibold text-slate-300">
-                Cart Items ({cart.itemCount})
+                Cart Items ({(cart.itemCount ?? (cart.items ? cart.items.reduce((a, b) => a + b.quantity, 0) : 0))})
               </span>
               <button
                 onClick={clearCart}

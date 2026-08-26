@@ -59,7 +59,7 @@ export const aiLimiter = rateLimit({
 /** General APIs Rate Limiter — 100 requests per 15 minutes (bypassed in test) */
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: isTest ? 10000 : 100,
+  max: isTest ? 10000 : 5,
   handler: (req: Request, res: Response) => {
     res.status(429).json({
       success: false,

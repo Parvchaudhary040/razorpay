@@ -55,11 +55,7 @@ export interface AuditLog {
   id: string;
   eventType: string;
   userId?: string;
-  sessionId?: string;
-  entityType?: string;
-  entityId?: string;
   actor: string;
-  payload: any;
-  ipAddress?: string;
-  createdAt: string;
+  timestamp: string;
+  details: Record<string, any>;
 }

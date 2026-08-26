@@ -1,4 +1,4 @@
-import { ValidationError, logger, detectPromptInjection } from '@commerce-ai/shared';
+﻿import { ValidationError, logger, detectPromptInjection } from '@commerce-ai/shared';
 
 /** Tool Security Sandbox, Output Sanitizer, and Prompt Injection Defense Layer */
 export class ToolValidator {
@@ -39,8 +39,8 @@ export class ToolValidator {
           throw new ValidationError(`Security violation: Invalid characters in parameter '${key}'`);
         }
 
-        // 3. Block arbitrary URL access attempts
-        if (value.match(/https?:\/\//i)) {
+        // 3. Block arbitrary URL access attempts and SSRF vectors
+        if (value.match(/https?:\/\/|file:\/\/|ftp:\/\/|gopher:\/\/|data:|127\.0\.0\.1|localhost/i)) {
           logger.warn(`Arbitrary URL access attempt blocked! Tool: ${toolName}, Param: ${key}, Value: ${value}`);
           throw new ValidationError('Security violation: External URL execution is not permitted.');
         }

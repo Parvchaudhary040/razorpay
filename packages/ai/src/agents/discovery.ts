@@ -40,6 +40,21 @@ export class DiscoveryAgent {
         break;
       case 'PRODUCT_COMPARE':
         toolName = 'compare_products';
+        // If no product IDs provided, extract from recent conversation or search context
+        if (!toolParams.ids || toolParams.ids.length === 0) {
+          // Try to extract product IDs from conversation history
+          const extractedIds = this.extractProductIdsFromHistory(history);
+          if (extractedIds && extractedIds.length >= 2) {
+            toolParams.ids = extractedIds.slice(0, 4); // Max 4 products
+          } else {
+            // Fallback: fetch top products and return for user selection
+            return {
+              agent: AGENT_NAME,
+              message: 'I\'d be happy to compare products for you! Please provide the product IDs or names you\'d like me to compare. You can also ask me to search for specific products first.',
+              requiresConfirmation: false,
+            };
+          }
+        }
         break;
       default:
         toolName = 'search_products';
@@ -129,6 +144,23 @@ export class DiscoveryAgent {
     }
 
     return JSON.stringify(result).slice(0, 2000);
+  }
+
+  /** Extract product IDs from conversation history to use for comparison */
+  private static extractProductIdsFromHistory(history: Message[]): string[] {
+    const ids: string[] = [];
+    const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
+    
+    // Look through last 10 messages for product IDs
+    for (const msg of history.slice(-10)) {
+      const matches = msg.content.match(uuidRegex);
+      if (matches) {
+        ids.push(...matches.filter(id => !ids.includes(id)));
+      }
+      if (ids.length >= 4) break;
+    }
+    
+    return ids;
   }
 
   /** Fallback response when Gemini is unavailable */

@@ -1,4 +1,5 @@
 ﻿import { pool } from '@commerce-ai/database';
+import { generateProductEmbedding } from '@commerce-ai/ai';
 import { 
   Product, 
   ProductSearchResult, 
@@ -22,11 +23,20 @@ export class ProductRepository {
     try {
       await client.query('BEGIN');
 
+      // Generate embedding based on product attributes
+      let embeddingVector: number[] = [];
+      try {
+        embeddingVector = await generateProductEmbedding({ name, description, category, specifications });
+      } catch (err) {
+        logger.warn('Failed to generate product embedding during creation', { err });
+      }
+      const vectorLiteral = embeddingVector.length > 0 ? '[' + embeddingVector.join(',') + ']' : null;
+
       const productResult = await client.query(
-        `INSERT INTO products (merchant_id, name, description, price, category, specifications)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO products (merchant_id, name, description, price, category, specifications, embedding)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
          RETURNING id, merchant_id, name, description, price, category, specifications, created_at`,
-        [merchantId, name, description, price, category, JSON.stringify(specifications)]
+        [merchantId, name, description, price, category, JSON.stringify(specifications), vectorLiteral]
       );
 
       const product = productResult.rows[0];
@@ -302,6 +312,59 @@ export class ProductRepository {
   }
 
   /** Update inventory count for a product */
+
+  /** Semantic search products using vector similarity + structured filters */
+  static async semanticSearch(
+    queryEmbedding: number[],
+    filters: SearchFilters
+  ): Promise<Product[]> {
+    const vectorLiteral = '[' + queryEmbedding.join(',') + ']';
+    const params: any[] = [vectorLiteral];
+    const conditions: string[] = [];
+
+    if (filters.category) {
+      params.push(filters.category);
+      conditions.push(`p.category = ${params.length}`);
+    }
+
+    if (filters.minPrice !== undefined) {
+      params.push(filters.minPrice);
+      conditions.push(`p.price >= ${params.length}`);
+    }
+
+    if (filters.maxPrice !== undefined) {
+      params.push(filters.maxPrice);
+      conditions.push(`p.price <= ${params.length}`);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const limit = filters.limit || 10;
+    params.push(limit);
+    const limitPlaceholder = `${params.length}`;
+
+    const query = `
+      SELECT p.id, p.merchant_id, p.name, p.description, p.price, p.category, p.specifications, p.created_at,
+             COALESCE(i.stock_count, 0) as stock_count
+      FROM products p
+      LEFT JOIN inventory i ON p.id = i.product_id
+      ${whereClause}
+      ORDER BY p.embedding <=> $1
+      LIMIT ${limitPlaceholder}
+    `;
+
+    const result = await pool.query(query, params);
+    return result.rows.map((row: any) => ({
+      id: row.id,
+      merchantId: row.merchant_id,
+      name: row.name,
+      description: row.description,
+      price: parseFloat(row.price),
+      category: row.category,
+      specifications: row.specifications,
+      createdAt: row.created_at,
+      inventoryCount: parseInt(row.stock_count, 10)
+    }));
+  }
   static async updateInventory(productId: string, inventoryCount: number): Promise<void> {
     await pool.query(
       `UPDATE inventory

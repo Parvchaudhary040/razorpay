@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Cart } from '../../types';
 
@@ -9,7 +9,7 @@ interface CartSummaryProps {
 export const CartSummary: React.FC<CartSummaryProps> = ({ cart }) => {
   const navigate = useNavigate();
 
-  const subtotal = cart.total;
+  const subtotal = (cart as any).totalAmount || cart.total || 0;
   const shipping = 0;
   const orderTotal = subtotal + shipping;
 
@@ -19,8 +19,8 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart }) => {
 
       <div className="space-y-4 text-sm text-slate-300">
         <div className="flex justify-between">
-          <span className="text-slate-400">Subtotal ({cart.itemCount} items)</span>
-          <span className="font-semibold text-slate-200">₹{subtotal.toLocaleString()}</span>
+          <span className="text-slate-400">Subtotal ({(cart.itemCount ?? (cart.items ? cart.items.reduce((a, b) => a + b.quantity, 0) : 0))} items)</span>
+          <span className="font-semibold text-slate-200">₹{(Number(subtotal) || 0).toLocaleString()}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-slate-400">Shipping</span>
@@ -28,13 +28,13 @@ export const CartSummary: React.FC<CartSummaryProps> = ({ cart }) => {
         </div>
         <div className="flex justify-between border-t border-slate-800 pt-4 text-base">
           <span className="font-bold text-slate-100">Order Total</span>
-          <span className="font-extrabold text-indigo-400 text-lg">₹{orderTotal.toLocaleString()}</span>
+          <span className="font-extrabold text-indigo-400 text-lg">₹{(Number(orderTotal) || 0).toLocaleString()}</span>
         </div>
       </div>
 
       <button
         onClick={() => navigate('/checkout')}
-        disabled={cart.itemCount === 0}
+        disabled={(cart.itemCount ?? (cart.items ? cart.items.reduce((a, b) => a + b.quantity, 0) : 0)) === 0}
         className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white disabled:text-slate-600 py-3 rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/35 transition duration-200"
       >
         Proceed to Checkout

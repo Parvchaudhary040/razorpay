@@ -3,6 +3,9 @@ import { pool } from '@commerce-ai/database';
 import { ProductService } from '@commerce-ai/catalog';
 import { CartService } from '@commerce-ai/cart';
 import { ValidationError, ForbiddenError, NotFoundError, logger, loadConfig } from '@commerce-ai/shared';
+import { AuditLogger } from '@commerce-ai/database';
+import { WorkflowEventType } from '@commerce-ai/shared';
+
 import Razorpay from 'razorpay';
 
 const config = loadConfig();
@@ -117,10 +120,58 @@ export class CommerceToolLayer {
     agentName: string,
     agentRunId: string
   ): Promise<any> {
+    try {
+      const result = await this._executeInternal(toolName, userId, params, agentName, agentRunId);
+      
+      // AUDIT LOG: TOOL_COMPLETED
+      await AuditLogger.logEvent(userId, WorkflowEventType.TOOL_COMPLETED, 'system', {
+        agent_run_id: agentRunId,
+        tool: toolName,
+        agent: agentName,
+        status: 'SUCCESS'
+      });
+
+      return result;
+    } catch (err: any) {
+      // AUDIT LOG: TOOL_COMPLETED (FAILED)
+      await AuditLogger.logEvent(userId, WorkflowEventType.TOOL_COMPLETED, 'system', {
+        agent_run_id: agentRunId,
+        tool: toolName,
+        agent: agentName,
+        status: 'FAILED',
+        error: err.message
+      });
+      throw err;
+    }
+  }
+
+  static async _executeInternal(
+    toolName: string,
+    userId: string,
+    params: any,
+    agentName: string,
+    agentRunId: string
+  ): Promise<any> {
     logger.info(`Executing tool: ${toolName}`, { toolName, userId, params, agentName, agentRunId });
+
+    // AUDIT LOG: TOOL_CALLED
+    await AuditLogger.logEvent(userId, WorkflowEventType.TOOL_CALLED, 'system', {
+      agent_run_id: agentRunId,
+      tool: toolName,
+      agent: agentName,
+      safe_metadata: params
+    });
 
     // 1. Authenticate user & identify agent permission check first (Security Rule: Check permissions before input validation)
     const { PolicyEngine } = require('@commerce-ai/ai/dist/security/policy');
+    
+    // AUDIT LOG: TOOL_AUTHORIZATION (pre-policy check)
+    await AuditLogger.logEvent(userId, WorkflowEventType.TOOL_AUTHORIZATION, 'system', {
+      agent_run_id: agentRunId,
+      tool: toolName,
+      agent: agentName
+    });
+
     await PolicyEngine.evaluatePolicy(agentName, toolName, userId, params, agentRunId);
 
     // 2. Check if tool exists in registry
@@ -244,23 +295,11 @@ export class CommerceToolLayer {
         }
 
         case 'create_payment': {
-          const { orderId, amount } = parsedParams.data;
-
-          // Verify resource ownership (Order must exist and belong to user)
-          const orderRes = await pool.query('SELECT * FROM orders WHERE id = $1', [orderId]);
-          if (orderRes.rows.length === 0) {
-            throw new NotFoundError('Order not found');
-          }
-          const order = orderRes.rows[0];
-          if (order.user_id !== userId) {
-            throw new ForbiddenError('Access denied: You do not own this order');
-          }
-
-          const paymentRes = await pool.query(
-            'INSERT INTO payments (order_id, status, amount, payment_method) VALUES ($1, $2, $3, $4) RETURNING *',
-            [orderId, 'CREATED', amount, 'Razorpay']
-          );
-          return paymentRes.rows[0];
+          const { orderId } = parsedParams.data;
+          const { PaymentService } = require('@commerce-ai/api/dist/services/paymentService');
+          
+          // PaymentService.createPayment inherently validates ownership and uses row-level locking
+          return await PaymentService.createPayment(userId, orderId);
         }
 
         case 'get_payment_status': {

@@ -1,4 +1,4 @@
-// ============================================
+﻿// ============================================
 // CommerceAI — Shared Utility Functions
 // ============================================
 
@@ -108,6 +108,11 @@ export function detectPromptInjection(input: string, source = 'user'): void {
     'bypass authorization',
     'system prompt',
     'developer prompt',
+    'you are now',
+    'forget everything',
+    'ignore all previous',
+    'system:',
+    'assistant:',
     'call refund',
     'execute refund',
     'refund order',

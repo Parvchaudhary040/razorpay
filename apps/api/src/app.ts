@@ -39,8 +39,23 @@ app.use(requestIdMiddleware);
 app.use(helmet());
 
 // --- 3. CORS Configuration ---
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  config.cors.origin
+].filter(Boolean);
+
 app.use(cors({
-  origin: config.cors.origin,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (process.env.NODE_ENV !== 'production' && origin.startsWith('http://localhost:')) {
+      return callback(null, true);
+    }
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],

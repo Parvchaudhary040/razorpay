@@ -1,3 +1,4 @@
+﻿import { generateProductEmbedding } from '@commerce-ai/ai';
 import { ProductRepository } from './productRepository';
 import { 
   NotFoundError, 

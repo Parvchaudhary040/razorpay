@@ -1,5 +1,8 @@
-import { ForbiddenError, ValidationError, PolicyError, logger } from '@commerce-ai/shared';
+﻿import { ForbiddenError, ValidationError, PolicyError, logger } from '@commerce-ai/shared';
 import { pool } from '@commerce-ai/database';
+import { AuditLogger } from '@commerce-ai/database';
+import { WorkflowEventType } from '@commerce-ai/shared';
+
 import { CacheManager } from '@commerce-ai/database';
 import crypto from 'crypto';
 
@@ -225,17 +228,15 @@ export class PolicyEngine {
     params: Record<string, any>
   ): Promise<void> {
     try {
-      // 1. Create audit log event
-      const auditQuery = `
-        INSERT INTO audit_logs (user_id, event_type, actor, action_details)
-        VALUES ($1, $2, $3, $4)
-      `;
-      await pool.query(auditQuery, [
-        userId,
-        `AGENT_EXECUTE_TOOL`,
-        `agent`,
-        JSON.stringify({ toolName, agentName, decision, reason }),
-      ]);
+      // 1. Create centralized audit log event
+      await AuditLogger.logEvent(userId, WorkflowEventType.POLICY_CHECK, 'system', {
+        agent_run_id: agentRunId,
+        tool: toolName,
+        agent: agentName,
+        policy_decision: decision,
+        reasoning: reason,
+        safe_metadata: params
+      });
 
       // 2. Insert decision row
       const policyQuery = `

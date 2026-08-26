@@ -89,6 +89,9 @@ authRouter.post('/refresh', async (req, res, next) => {
       throw new ValidationError('Refresh token is required');
     }
 
+    if (await AuthService.isTokenBlocklisted(refreshToken)) {
+      throw new ValidationError('Refresh token has been revoked');
+    }
     const payload = AuthService.verifyToken(refreshToken);
     const userId = payload.sub;
     const role = payload.role;

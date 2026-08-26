@@ -3,7 +3,17 @@
 // ============================================
 
 /** Audit event types */
-export const AuditEventTypes = {
+export const WorkflowEventType = {
+  USER_REQUEST: 'USER_REQUEST',
+  AGENT_SELECTED: 'AGENT_SELECTED',
+  TOOL_AUTHORIZATION: 'TOOL_AUTHORIZATION',
+  TOOL_CALLED: 'TOOL_CALLED',
+  TOOL_COMPLETED: 'TOOL_COMPLETED',
+  POLICY_CHECK: 'POLICY_CHECK',
+  USER_CONFIRMATION: 'USER_CONFIRMATION',
+  ORDER_UPDATED: 'ORDER_UPDATED',
+  WORKFLOW_COMPLETED: 'WORKFLOW_COMPLETED',
+  WORKFLOW_FAILED: 'WORKFLOW_FAILED',
   USER_REGISTER: 'USER_REGISTER',
   USER_LOGIN: 'USER_LOGIN',
   USER_LOGOUT: 'USER_LOGOUT',
@@ -30,7 +40,7 @@ export const AuditEventTypes = {
   AGENT_RESPONSE_GENERATED: 'AGENT_RESPONSE_GENERATED',
 } as const;
 
-export type AuditEventType = (typeof AuditEventTypes)[keyof typeof AuditEventTypes];
+export type WorkflowEventType = (typeof WorkflowEventType)[keyof typeof WorkflowEventType];
 
 /** Order status transitions */
 export const VALID_ORDER_TRANSITIONS: Record<string, string[]> = {

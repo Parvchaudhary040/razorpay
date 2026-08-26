@@ -1,4 +1,4 @@
-export * from './types';
+﻿export * from './types';
 export * from './models';
 export * from './prompts';
 export * from './supervisor';
@@ -9,3 +9,4 @@ export * from './agents';
 export { DiscoveryAgent } from './agents/discovery';
 export { GrowthAgent } from './agents/growth';
 export { CheckoutAgent } from './agents/checkout';
+export * from './embeddings';

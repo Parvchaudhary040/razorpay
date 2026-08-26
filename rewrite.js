@@ -1,4 +1,9 @@
-import crypto from 'crypto';
+﻿const fs = require('fs');
+const path = require('path');
+
+const filePath = path.join(__dirname, 'apps/api/src/services/paymentService.ts');
+
+const newContent = `import crypto from 'crypto';
 import { pool } from '@commerce-ai/database';
 import { loadConfig, NotFoundError, ValidationError, ForbiddenError, logger } from '@commerce-ai/shared';
 import { razorpayClient } from '../utils/razorpay';
@@ -10,7 +15,7 @@ export class PaymentService {
    * Create Razorpay Payment Order
    */
   static async createPayment(userId: string, orderId: string) {
-    logger.info(`Initiating payment creation for order ${orderId} by user ${userId}`);
+    logger.info(\`Initiating payment creation for order \${orderId} by user \${userId}\`);
 
     const client = await pool.connect();
     try {
@@ -33,7 +38,7 @@ export class PaymentService {
         throw new ValidationError('Order is already paid');
       }
       if (!['PENDING', 'PAYMENT_PENDING'].includes(order.status)) {
-        throw new ValidationError(`Cannot pay for an order in status ${order.status}`);
+        throw new ValidationError(\`Cannot pay for an order in status \${order.status}\`);
       }
 
       // 4. Duplicate payment protection
@@ -57,14 +62,14 @@ export class PaymentService {
         });
       } catch (err: any) {
         logger.error('Razorpay order creation failed', { error: err.message });
-        throw new ValidationError(`Razorpay order creation failed: ${err.message}`);
+        throw new ValidationError(\`Razorpay order creation failed: \${err.message}\`);
       }
 
       // 6. Create payment record in database
       const paymentRes = await client.query(
-        `INSERT INTO payments (order_id, razorpay_order_id, amount, status)
+        \`INSERT INTO payments (order_id, razorpay_order_id, amount, status)
          VALUES ($1, $2, $3, 'CREATED')
-         RETURNING *`,
+         RETURNING *\`,
         [orderId, rzpOrder.id, order.total_amount]
       );
 
@@ -98,12 +103,12 @@ export class PaymentService {
     razorpayPaymentId: string,
     razorpaySignature: string
   ) {
-    logger.info(`Verifying payment signature for order ${razorpayOrderId}`);
+    logger.info(\`Verifying payment signature for order \${razorpayOrderId}\`);
 
     // 1. Verify Razorpay signature
     const generatedSignature = crypto
       .createHmac('sha256', config.razorpay.keySecret)
-      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+      .update(\`\${razorpayOrderId}|\${razorpayPaymentId}\`)
       .digest('hex');
 
     if (generatedSignature !== razorpaySignature) {
@@ -117,10 +122,10 @@ export class PaymentService {
 
       // 2. Fetch payment and order details with FOR UPDATE
       const paymentRes = await client.query(
-        `SELECT p.*, o.user_id, o.status as order_status, o.total_amount
+        \`SELECT p.*, o.user_id, o.status as order_status, o.total_amount
          FROM payments p
          JOIN orders o ON p.order_id = o.id
-         WHERE p.razorpay_order_id = $1 FOR UPDATE`,
+         WHERE p.razorpay_order_id = $1 FOR UPDATE\`,
         [razorpayOrderId]
       );
 
@@ -146,7 +151,7 @@ export class PaymentService {
         rzpPayment = await razorpayClient.payments.fetch(razorpayPaymentId);
       } catch (err: any) {
         logger.error('Razorpay payment fetch failed', { error: err.message });
-        throw new ValidationError(`Razorpay payment fetch failed: ${err.message}`);
+        throw new ValidationError(\`Razorpay payment fetch failed: \${err.message}\`);
       }
 
       const expectedAmountInPaise = Math.round(Number(payment.total_amount) * 100);
@@ -156,9 +161,9 @@ export class PaymentService {
 
       // 6. Update payment status in database
       await client.query(
-        `UPDATE payments
+        \`UPDATE payments
          SET status = 'CAPTURED', razorpay_payment_id = $1, razorpay_signature = $2, updated_at = NOW()
-         WHERE id = $3`,
+         WHERE id = $3\`,
         [razorpayPaymentId, razorpaySignature, payment.id]
       );
 
@@ -168,7 +173,7 @@ export class PaymentService {
       );
 
       await client.query('COMMIT');
-      logger.info(`Payment verified and captured successfully for order ${payment.order_id}`);
+      logger.info(\`Payment verified and captured successfully for order \${payment.order_id}\`);
       return { success: true, paymentId: payment.id, orderId: payment.order_id };
     } catch (err) {
       await client.query('ROLLBACK');
@@ -182,12 +187,12 @@ export class PaymentService {
    * Fetch payment by ID (with ownership check)
    */
   static async getPayment(userId: string, role: string, paymentId: string) {
-    const paymentQuery = `
+    const paymentQuery = \`
       SELECT p.*, o.user_id 
       FROM payments p 
       JOIN orders o ON p.order_id = o.id 
       WHERE p.id = $1
-    `;
+    \`;
     const paymentRes = await pool.query(paymentQuery, [paymentId]);
     if (paymentRes.rows.length === 0) {
       throw new NotFoundError('Payment not found');
@@ -220,7 +225,7 @@ export class PaymentService {
 
     const payload = JSON.parse(rawBody.toString());
     const event = payload.event;
-    logger.info(`Razorpay Webhook event received: ${event}`);
+    logger.info(\`Razorpay Webhook event received: \${event}\`);
 
     const paymentEntity = payload.payload?.payment?.entity;
     if (!paymentEntity) {
@@ -243,7 +248,7 @@ export class PaymentService {
       // 2. Fetch corresponding payment record WITH FOR UPDATE to prevent race condition
       const paymentRes = await client.query('SELECT * FROM payments WHERE razorpay_order_id = $1 FOR UPDATE', [razorpayOrderId]);
       if (paymentRes.rows.length === 0) {
-        logger.warn(`No payment record found for razorpay_order_id: ${razorpayOrderId}`);
+        logger.warn(\`No payment record found for razorpay_order_id: \${razorpayOrderId}\`);
         await client.query('ROLLBACK');
         return { status: 'ignored' };
       }
@@ -251,16 +256,16 @@ export class PaymentService {
 
       // 3. Webhook idempotency: skip if already captured
       if (payment.status === 'CAPTURED') {
-        logger.info(`Webhook event ${event} ignored: Payment is already CAPTURED`);
+        logger.info(\`Webhook event \${event} ignored: Payment is already CAPTURED\`);
         await client.query('ROLLBACK');
         return { status: 'ignored_duplicate' };
       }
 
       if (event === 'payment.captured') {
         await client.query(
-          `UPDATE payments
+          \`UPDATE payments
            SET status = 'CAPTURED', razorpay_payment_id = $1, updated_at = NOW()
-           WHERE id = $2`,
+           WHERE id = $2\`,
           [razorpayPaymentId, payment.id]
         );
 
@@ -268,16 +273,16 @@ export class PaymentService {
           "UPDATE orders SET status = 'PAID', updated_at = NOW() WHERE id = $1",
           [payment.order_id]
         );
-        logger.info(`Webhook processed: payment ${payment.id} set to CAPTURED, order set to PAID`);
+        logger.info(\`Webhook processed: payment \${payment.id} set to CAPTURED, order set to PAID\`);
       } else if (event === 'payment.failed') {
         await client.query(
-          `UPDATE payments
+          \`UPDATE payments
            SET status = 'FAILED', razorpay_payment_id = $1, updated_at = NOW()
-           WHERE id = $2`,
+           WHERE id = $2\`,
           [razorpayPaymentId, payment.id]
         );
 
-        logger.info(`Webhook processed: payment ${payment.id} set to FAILED`);
+        logger.info(\`Webhook processed: payment \${payment.id} set to FAILED\`);
       }
 
       await client.query('COMMIT');
@@ -291,3 +296,7 @@ export class PaymentService {
     }
   }
 }
+`;
+
+fs.writeFileSync(filePath, newContent, 'utf8');
+console.log('paymentService.ts rewritten successfully');

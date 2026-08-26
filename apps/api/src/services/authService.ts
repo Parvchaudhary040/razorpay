@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+﻿import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { pool } from '@commerce-ai/database';
 import { 
@@ -48,6 +48,19 @@ export class AuthService {
   }
 
   /** Verify and decode a token */
+  static async isTokenBlocklisted(token: string): Promise<boolean> {
+    const result = await pool.query('SELECT 1 FROM token_blocklist WHERE token = $1', [token]);
+    return result.rows.length > 0;
+  }
+
+  static async blocklistToken(token: string, expiresInMs: number): Promise<void> {
+    const expiresAt = new Date(Date.now() + expiresInMs);
+    await pool.query(
+      'INSERT INTO token_blocklist (token, expires_at) VALUES ($1, $2) ON CONFLICT (token) DO NOTHING',
+      [token, expiresAt]
+    );
+  }
+
   static verifyToken(token: string): JwtPayload {
     try {
       return jwt.verify(token, config.jwt.secret) as JwtPayload;

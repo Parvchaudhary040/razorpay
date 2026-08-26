@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "@commerce-ai/catalog",
   "version": "1.0.0",
   "private": true,
@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@commerce-ai/shared": "*",
-    "@commerce-ai/database": "*"
+    "@commerce-ai/database": "*",
+    "@commerce-ai/ai": "*"
   },
   "devDependencies": {
     "typescript": "^5.3.3",

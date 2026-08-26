@@ -1,9 +1,12 @@
-import { Router } from 'express';
+﻿import { Router } from 'express';
 import { CommerceSupervisor, CommerceAgentRunner, AIStateManager, ToolValidator, CheckoutAgent } from '@commerce-ai/ai';
 import { authenticate, AuthenticatedRequest } from '../middleware/auth';
 import { aiLimiter } from '../middleware/security';
 import { ValidationError } from '@commerce-ai/shared';
 import { pool } from '@commerce-ai/database';
+import { AuditLogger } from '@commerce-ai/database';
+import { WorkflowEventType } from '@commerce-ai/shared';
+
 
 export const aiRouter = Router();
 
@@ -42,6 +45,14 @@ aiRouter.post('/chat', async (req: AuthenticatedRequest, res, next) => {
 
     // 4. Classify intent and extract parameters using supervisor
     const supervisorOutput = await CommerceSupervisor.classifyIntent(message, historyForSupervisor);
+
+    // AUDIT LOG: AGENT_SELECTED
+    await AuditLogger.logEvent(userId, WorkflowEventType.AGENT_SELECTED, 'agent', {
+      agent_run_id: agentRunId,
+      intent: supervisorOutput.intent,
+      extracted_query: supervisorOutput.query,
+      filters: supervisorOutput.filters
+    });
 
     // 5. Execute through the specialized agent pipeline
     const agentResponse = await CommerceAgentRunner.executeIntent(
