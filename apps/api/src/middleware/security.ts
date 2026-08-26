@@ -5,10 +5,10 @@ import { Request, Response, NextFunction } from 'express';
 const config = loadConfig();
 const isTest = process.env.NODE_ENV === 'test';
 
-/** Auth Rate Limiter — 5 attempts per 15 minutes (bypassed in test) */
+/** Auth Rate Limiter — 50 attempts per 15 minutes (bypassed in test) */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: isTest ? 10000 : 5,
+  max: isTest ? 10000 : 50,
   handler: (req: Request, res: Response) => {
     res.status(429).json({
       success: false,
@@ -59,7 +59,7 @@ export const aiLimiter = rateLimit({
 /** General APIs Rate Limiter — 100 requests per 15 minutes (bypassed in test) */
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: isTest ? 10000 : 5,
+  max: isTest ? 10000 : 50,
   handler: (req: Request, res: Response) => {
     res.status(429).json({
       success: false,
