@@ -11,6 +11,7 @@
   "scripts": {
     "typecheck": "npm run typecheck --workspaces --if-present",
     "build": "npm run build --workspaces --if-present",
+    "build:backend": "npm run build -w packages/shared -w packages/database -w packages/ai -w packages/catalog -w packages/cart -w packages/tools -w apps/api",
     "dev:api": "npm run dev -w apps/api",
     "dev:web": "npm run dev -w frontend",
     "lint": "npm run lint --workspaces --if-present"
