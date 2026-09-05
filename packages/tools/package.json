@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@commerce-ai/ai": "*",
     "@commerce-ai/cart": "*",
     "@commerce-ai/catalog": "*",
     "@commerce-ai/database": "*",
