@@ -43,25 +43,24 @@ export const LetterGlitch: React.FC<LetterGlitchProps> = ({
   const charWidth = 10;
   const charHeight = 20;
 
-  const getRandomChar = () => {
-    return lettersAndSymbols[Math.floor(Math.random() * lettersAndSymbols.length)];
+  const getRandomChar = (): string => {
+    return lettersAndSymbols[Math.floor(Math.random() * lettersAndSymbols.length)] || '?';
   };
 
-  const getRandomColor = () => {
-    return glitchColors[Math.floor(Math.random() * glitchColors.length)];
+  const getRandomColor = (): string => {
+    return glitchColors[Math.floor(Math.random() * glitchColors.length)] || '#61dca3';
   };
 
   const hexToRgb = (hex: string) => {
     const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
     const cleanHex = hex.replace(shorthandRegex, (_m, r, g, b) => r + r + g + g + b + b);
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(cleanHex);
-    return result
-      ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16),
-        }
-      : null;
+    if (!result || !result[1] || !result[2] || !result[3]) return null;
+    return {
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16),
+    };
   };
 
   const interpolateColor = (
