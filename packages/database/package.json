@@ -11,11 +11,12 @@
   "dependencies": {
     "@commerce-ai/shared": "*",
     "pg": "^8.11.3",
-    "redis": "^4.6.10"
+    "redis": "^4.6.10",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
+    "@types/node": "^20.11.0",
     "@types/pg": "^8.10.9",
-    "@types/node": "^20.11.0"
+    "typescript": "^5.3.3"
   }
 }

@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "@commerce-ai/catalog",
   "version": "1.0.0",
   "private": true,
@@ -9,12 +9,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@commerce-ai/shared": "*",
+    "@commerce-ai/ai": "*",
     "@commerce-ai/database": "*",
-    "@commerce-ai/ai": "*"
+    "@commerce-ai/shared": "*",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "@types/node": "^20.11.0"
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
   }
 }

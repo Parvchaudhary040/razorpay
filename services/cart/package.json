@@ -9,11 +9,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@commerce-ai/database": "*",
     "@commerce-ai/shared": "*",
-    "@commerce-ai/database": "*"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "@types/node": "^20.11.0"
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
   }
 }

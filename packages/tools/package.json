@@ -14,6 +14,7 @@
     "@commerce-ai/database": "*",
     "@commerce-ai/shared": "*",
     "razorpay": "^2.9.8",
+    "uuid": "^9.0.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {

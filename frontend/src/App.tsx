@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom
 import { Navbar } from './components/layout/Navbar';
 import { Sidebar } from './components/layout/Sidebar';
 import { LoginPage } from './pages/LoginPage';
+import { SplashPage } from './pages/SplashPage';
+import { LandingPage } from './pages/LandingPage';
 import { ChatPage } from './pages/ChatPage';
 import { ProductsPage } from './pages/ProductsPage';
 import { CartPage } from './pages/CartPage';
@@ -53,6 +55,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Splash → Landing → Login flow */}
+        <Route path="/splash" element={<SplashPage />} />
+        <Route path="/welcome" element={<LandingPage />} />
+
         <Route
           path="/login"
           element={
@@ -72,10 +78,11 @@ function App() {
           <Route path="/audit" element={<AuditPage />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/splash" replace />} />
       </Routes>
     </BrowserRouter>
   );
 }
 
 export default App;
+

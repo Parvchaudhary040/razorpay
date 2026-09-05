@@ -19,7 +19,7 @@ describe('Adversarial Security Tests - Prompt Injection Defenses', () => {
   ];
 
   for (const prompt of adversarialPrompts) {
-    it(should detect and block adversarial prompt: "$prompt", () => {
+    it(`should detect and block adversarial prompt: "${prompt}"`, () => {
       // The shared function throws a ValidationError when injection is detected
       expect(() => {
         detectPromptInjection(prompt, 'user');

@@ -10,7 +10,7 @@ export const Navbar: React.FC = () => {
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate('/welcome');
   };
 
   const badgeCount = cart?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
